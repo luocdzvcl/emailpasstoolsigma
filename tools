@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lọc Email:Pass</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 1200px;
+        }
+        h2 {
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .output {
+            margin-top: 20px;
+            text-align: left;
+            font-weight: bold;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: none; /* Ẩn ô kết quả ban đầu */
+            max-height: 200px; /* Giới hạn chiều cao */
+            overflow-y: auto; /* Kích hoạt cuộn dọc */
+        }
+        .button-group {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .button-group button {
+            flex: 1;
+            min-width: 48%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Nhập Chuỗi và Lọc Email:Pass</h2>
+        <textarea id="inputText" placeholder="Dán chuỗi chứa email và mật khẩu ở đây..." required></textarea>
+        <button id="filterButton" onclick="filterEmails()">Lọc Email:Pass</button>
+        
+        <div id="output" class="output"></div>
+        
+        <div class="button-group">
+            <button onclick="copyToClipboard()">Sao chép kết quả</button>
+            <button onclick="downloadResult()">Tải xuống kết quả</button>
+            <button onclick="removeDuplicates()">Xoá Email:Pass Lặp lại</button>
+            <button onclick="resetInput()">Lọc File Mới</button>
+            <button onclick="importFile()">Nhập File</button>
+        </div>
+    </div>
+
+    <script>
+        let resultData = [];
+
+        function filterEmails() {
+            const inputText = document.getElementById("inputText");
+            const outputDiv = document.getElementById("output");
+            const filterButton = document.getElementById("filterButton");
+            
+            // Regular expression để tìm các cặp email và mật khẩu
+            const regex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}):([a-zA-Z0-9!@#$%^&*()_+=-]{6,})/g;
+            let matches = inputText.value.match(regex);
+            
+            if (matches && matches.length > 0) {
+                resultData = matches; // Lưu kết quả vào mảng resultData
+                outputDiv.textContent = resultData.join("\n");
+                outputDiv.style.display = "block"; // Hiển thị ô kết quả
+                inputText.style.display = "none"; // Ẩn ô nhập
+                filterButton.style.display = "none"; // Ẩn nút Lọc Email:Pass
+            } else {
+                outputDiv.textContent = "Không tìm thấy email và mật khẩu hợp lệ.";
+                outputDiv.style.display = "block"; // Hiển thị ô kết quả
+            }
+        }
+
+        function resetInput() {
+            const inputText = document.getElementById("inputText");
+            const outputDiv = document.getElementById("output");
+            const filterButton = document.getElementById("filterButton");
+            inputText.value = ""; // Xóa nội dung ô nhập
+            inputText.style.display = "block"; // Hiển thị lại ô nhập
+            outputDiv.style.display = "none"; // Ẩn ô kết quả
+            filterButton.style.display = "block"; // Hiển thị lại nút Lọc Email:Pass
+            resultData = []; // Reset kết quả
+        }
+
+        function importFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt';
+
+            input.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById("inputText").value = e.target.result;
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            input.click();
+        }
+
+        // Hàm sao chép kết quả vào clipboard
+        function copyToClipboard() {
+            const outputText = document.getElementById("output").textContent;
+            if (outputText) {
+                navigator.clipboard.writeText(outputText)
+                    .then(() => {
+                        alert("Đã sao chép vào clipboard!");
+                    })
+                    .catch(err => {
+                        alert("Lỗi khi sao chép: " + err);
+                    });
+            } else {
+                alert("Vui lòng lọc kết quả trước khi sao chép.");
+            }
+        }
+
+        // Hàm tải kết quả dưới dạng file văn bản
+        function downloadResult() {
+            const outputText = document.getElementById("output").textContent;
+            if (outputText) {
+                const blob = new Blob([outputText], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'email_pass.txt';
+                link.click();
+            } else {
+                alert("Vui lòng lọc kết quả trước khi tải xuống.");
+            }
+        }
+
+        // Hàm xoá các email:pass trùng lặp
+        function removeDuplicates() {
+            if (resultData.length === 0) {
+                alert("Vui lòng lọc kết quả trước khi xóa các email trùng lặp.");
+                return;
+            }
+            
+            // Sử dụng Set để loại bỏ các phần tử trùng lặp
+            const uniqueResults = [...new Set(resultData)];
+            resultData = uniqueResults; // Cập nhật lại mảng kết quả
+
+            const outputDiv = document.getElementById("output");
+            outputDiv.textContent = uniqueResults.join("\n");
+            alert("Đã xóa các email trùng lặp!");
+        }
+    </script>
+
+</body>
+</html>
