@@ -35,11 +35,9 @@ echo Invalid choice. Please try again.
 goto SingleFile
 
 :EnterFilePath
-:: Nhập đường dẫn file .txt
 echo Please enter the log/data .txt file (e.g., C:\path\to\file.txt):
 set /p filePath=
 
-:: Kiểm tra xem file có tồn tại không
 if not exist "%filePath%" (
     echo File not found. Please check the path and try again.
     echo.
@@ -64,18 +62,15 @@ echo Invalid choice. Please try again.
 goto FolderFilter
 
 :EnterFolderPath
-:: Nhập đường dẫn folder
 echo Please enter the folder path (e.g., C:\path\to\folder):
 set /p folderPath=
 
-:: Kiểm tra xem folder có tồn tại không
 if not exist "%folderPath%" (
     echo Folder not found. Please check the path and try again.
     echo.
     goto EnterFolderPath
 )
 
-:: Lấy ngày giờ hiện tại để đặt tên file kết quả tổng hợp
 for /f "tokens=2 delims==" %%I in ('"wmic os get localdatetime /value"') do set datetime=%%I
 set day=%datetime:~6,2%
 set month=%datetime:~4,2%
@@ -84,12 +79,16 @@ set hour=%datetime:~8,2%
 set minute=%datetime:~10,2%
 set second=%datetime:~12,2%
 
-:: Khởi tạo file kết quả tổng hợp
-set combinedFile=%keyword%_combined_%random%.txt
+if not defined keyword (
+    echo.
+    echo Please enter the keyword for filtering URLs:
+    set /p keyword=
+)
+
+set combinedFile=%keyword%_combined_%month%%day%%year%%hour%%minute%%second%.txt
 echo Combined results will be saved to: %combinedFile%
 echo.
 
-:: Lặp qua từng file .txt trong folder
 set fileCount=0
 for %%F in ("%folderPath%\*.txt") do (
     set /a fileCount+=1
@@ -103,34 +102,20 @@ if %fileCount%==0 (
     goto Menu
 )
 
-echo All files have been processed. Results saved to: %combinedFile%
+echo All files have been processed. Results saved to: %combinedFile%.
 echo.
 
-:: Prompt to return to main menu after processing
 echo Do you want to return to the main menu? (y/n)
 set /p exitChoice=
 if /i "%exitChoice%"=="y" goto Menu
 goto FolderFilter
 
 :FilterFileToCombined
-:: Lọc URL từ file hiện tại và nối vào file tổng hợp
-echo ===========================
 echo Filtering file: %filePath%
 
-:: File tạm thời để lưu các URL duy nhất
 set tempFile=unique_urls.tmp
-
-:: Khởi tạo file tạm thời trống
 echo. > "%tempFile%"
 
-:: Nhập từ khóa nếu chưa có
-if not defined keyword (
-    echo.
-    echo Please enter the keyword for filtering URLs:
-    set /p keyword=
-)
-
-:: Lọc URL, kiểm tra sự duy nhất và lưu vào file tạm
 for /f "delims=" %%A in ('findstr /i "%keyword%" "%filePath%"') do (
     findstr /x /c:"%%A" "%tempFile%" >nul
     if errorlevel 1 (
@@ -138,7 +123,6 @@ for /f "delims=" %%A in ('findstr /i "%keyword%" "%filePath%"') do (
     )
 )
 
-:: Nếu không có kết quả, bỏ qua
 for /f %%B in ('find /c /v "" "%tempFile%"') do set lineCount=%%B
 if %lineCount%==0 (
     echo No unique URLs found in file: %filePath%.
@@ -147,7 +131,6 @@ if %lineCount%==0 (
     goto :EOF
 )
 
-:: Nối kết quả từ file tạm vào file tổng hợp
 type "%tempFile%" >> "%combinedFile%"
 del "%tempFile%"
 
@@ -156,22 +139,16 @@ echo.
 goto :EOF
 
 :FilterFile
-:: Lọc một file đơn lẻ
-echo ===========================
 echo Filtering file: %filePath%
 
-:: File tạm thời để lưu các URL duy nhất
 set tempFile=unique_urls.tmp
-
-:: Nhập từ khóa lọc URL
 echo.
+
 echo Please enter the keyword for filtering URLs:
 set /p keyword=
 
-:: Khởi tạo file tạm thời trống
 echo. > "%tempFile%"
 
-:: Lọc URL, kiểm tra sự duy nhất và lưu vào file tạm
 for /f "delims=" %%A in ('findstr /i "%keyword%" "%filePath%"') do (
     findstr /x /c:"%%A" "%tempFile%" >nul
     if errorlevel 1 (
@@ -179,7 +156,6 @@ for /f "delims=" %%A in ('findstr /i "%keyword%" "%filePath%"') do (
     )
 )
 
-:: Nếu không có kết quả, thông báo và thoát
 for /f %%B in ('find /c /v "" "%tempFile%"') do set lineCount=%%B
 if %lineCount%==0 (
     echo No unique URLs found in file: %filePath%.
@@ -188,14 +164,20 @@ if %lineCount%==0 (
     goto Menu
 )
 
-:: Lưu kết quả vào file đầu ra
-set outputFile=%keyword%_filtered_%random%.txt
+for /f "tokens=2 delims==" %%I in ('"wmic os get localdatetime /value"') do set datetime=%%I
+set day=%datetime:~6,2%
+set month=%datetime:~4,2%
+set year=%datetime:~0,4%
+set hour=%datetime:~8,2%
+set minute=%datetime:~10,2%
+set second=%datetime:~12,2%
+
+set outputFile=%keyword%_filtered_%month%%day%%year%%hour%%minute%%second%.txt
 move /y "%tempFile%" "%outputFile%"
 
 echo Results have been saved to: %outputFile%.
 echo.
 
-:: Prompt to return to main menu after processing
 echo Do you want to return to the main menu? (y/n)
 set /p exitChoice=
 if /i "%exitChoice%"=="y" goto Menu
