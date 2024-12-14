@@ -42,4 +42,6 @@ example.com:user182375823:pas123759230
 
 example.com:user12395782390:pas12735938279826
 
+file sau khi được lọc sẽ có dạng example.com_filtered(combined)_datetime.txt
+
 ![htmv2](https://github.com/user-attachments/assets/0dd2e859-93b1-4aed-b3ca-17239240e03d)
