@@ -1,3 +1,5 @@
+TẤT CẢ CÁC THỨ NÀY ĐỀU ĐƯỢC LÀM BỞI CHATGPT
+
 Đối với https://luocdzvcl.github.io/emailpasstoolsigma/ thì nó sẽ giúp các bạn lọc được các hit từ Url:Email:Pass sẽ thành Email:Pass
 điều này giúp ích rất nhiều trong việc chạy Tool lọc tài khoản như Silverbullet, Openbullet,...
 
