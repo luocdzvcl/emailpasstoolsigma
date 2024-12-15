@@ -21,55 +21,76 @@ goto Menu
 
 :SingleFile
 cls
-echo ===========================
+echo ========================================
 echo      FUNCTION 1: SINGLE FILE
-echo ===========================
+echo ========================================
 echo.
-echo 1. Enter file path to filter
-echo 2. Exit to Main Menu
-set /p choice=Select an option (1/2): 
+echo ======================================================
+echo 	 Enter folder path to select a file
+:EnterFolderPathForSingle
+echo ======================================================
+set /p folderPath=Enter the folder path (e.g., C:\path\to\folder):
 
-if "%choice%"=="1" goto EnterFilePath
-if "%choice%"=="2" goto Menu
-echo Invalid choice. Please try again.
-goto SingleFile
+echo ===========================
 
-:EnterFilePath
-echo Please enter the log/data .txt file (e.g., C:\path\to\file.txt):
-set /p filePath=
-
-if not exist "%filePath%" (
-    echo File not found. Please check the path and try again.
+if not exist "%folderPath%" (
+    echo Folder not found. Please check the path and try again.
     echo.
-    goto EnterFilePath
+    goto EnterFolderPathForSingle
 )
+
+echo.
+echo Listing files in the folder:
+for %%F in ("%folderPath%\*.txt") do echo %%~nxF
+
+echo.
+echo Please enter the file name (e.g., file.txt):
+set /p fileName=
+if not exist "%folderPath%\%fileName%" (
+    echo File not found in the folder. Please try again.
+    echo.
+    goto EnterFolderPathForSingle
+)
+
+set filePath=%folderPath%\%fileName%
+
+echo.
+echo ===========================
+echo Where do you want to save the filtered file?
+echo Enter folder path to save or press Enter to save in the current directory.
+echo ===========================
+set /p savePath=
+if not defined savePath set savePath=.
 
 goto FilterFile
 
 :FolderFilter
 cls
-echo ===========================
+echo ========================================
 echo      FUNCTION 2: FOLDER FILTER
-echo ===========================
-echo.
-echo 1. Enter folder path to filter all .txt files
-echo 2. Exit to Main Menu
-set /p choice=Select an option (1/2): 
-
-if "%choice%"=="1" goto EnterFolderPath
-if "%choice%"=="2" goto Menu
-echo Invalid choice. Please try again.
-goto FolderFilter
+echo ========================================
+echo ======================================================
+echo  Enter folder path to filter all .txt files
 
 :EnterFolderPath
-echo Please enter the folder path (e.g., C:\path\to\folder):
-set /p folderPath=
+echo ======================================================
+set /p folderPath=Enter the folder path (e.g., C:\path\to\folder):
+
+echo ===========================
 
 if not exist "%folderPath%" (
     echo Folder not found. Please check the path and try again.
     echo.
     goto EnterFolderPath
 )
+
+echo.
+echo ===========================
+echo Where do you want to save the combined result file?
+echo Enter folder path to save or press Enter to save in the current directory.
+echo ===========================
+set /p savePath=
+if not defined savePath set savePath=.
 
 for /f "tokens=2 delims==" %%I in ('"wmic os get localdatetime /value"') do set datetime=%%I
 set day=%datetime:~6,2%
@@ -85,7 +106,7 @@ if not defined keyword (
     set /p keyword=
 )
 
-set combinedFile=%keyword%_combined_%month%%day%%year%%hour%%minute%%second%.txt
+set combinedFile=%savePath%\%keyword%_combined_%month%%day%%year%%hour%%minute%%second%.txt
 echo Combined results will be saved to: %combinedFile%
 echo.
 
@@ -144,7 +165,9 @@ echo Filtering file: %filePath%
 set tempFile=unique_urls.tmp
 echo.
 
+echo ===========================
 echo Please enter the keyword for filtering URLs:
+echo ===========================
 set /p keyword=
 
 echo. > "%tempFile%"
@@ -172,7 +195,7 @@ set hour=%datetime:~8,2%
 set minute=%datetime:~10,2%
 set second=%datetime:~12,2%
 
-set outputFile=%keyword%_filtered_%month%%day%%year%%hour%%minute%%second%.txt
+set outputFile=%savePath%\%keyword%_filtered_%month%%day%%year%%hour%%minute%%second%.txt
 move /y "%tempFile%" "%outputFile%"
 
 echo Results have been saved to: %outputFile%.
