@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lọc Email:Pass</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,6 +14,7 @@
             height: 100vh;
             margin: 0;
             background-color: #f4f4f9;
+            flex-direction: column;
         }
         .container {
             background-color: #fff;
@@ -20,13 +22,14 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 1200px;
+            text-align: center;
         }
         h2 {
             text-align: center;
         }
         textarea {
             width: 100%;
-            height: 300px;
+            height: 450px;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ddd;
@@ -41,6 +44,10 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         button:hover {
             background-color: #45a049;
@@ -55,9 +62,9 @@
             padding: 10px;
             border-radius: 4px;
             border: 1px solid #ddd;
-            display: none; /* Ẩn ô kết quả ban đầu */
-            max-height: 200px; /* Giới hạn chiều cao */
-            overflow-y: auto; /* Kích hoạt cuộn dọc */
+            display: none;
+            max-height: 460px;
+            overflow-y: auto;
         }
         .button-group {
             margin-top: 10px;
@@ -70,66 +77,236 @@
             flex: 1;
             min-width: 48%;
         }
+        #languageSelector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #languageSelector select {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        #languageButton {
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        #exitButton {
+            padding: 15px;
+            background-color: #f44336;
+            color: white;
+            font-size: 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        /* Modal styling */
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #modalContent {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+        #modalContent input {
+            padding: 10px;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        #modalContent button {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Lọc Email:Pass Sạch Hơn Thuỳ Anh Lanh Chanh</h2>
+    <!-- Màn hình chọn ngôn ngữ -->
+    <div id="languageContainer" class="container">
+        <h2>Choose Your Language | Chọn Ngôn Ngữ</h2>
+        <div id="languageSelector">
+            <select id="languageSelect">
+                <option value="vi">Tiếng Việt</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+        <button id="languageButton" onclick="chooseLanguage()">CONFIRM | XÁC NHẬN</button>
+    </div>
+
+    <!-- Màn hình lọc Email:Pass -->
+    <div id="filterContainer" class="container" style="display: none;">
+        <h2 id="title">Lọc Email:Pass Sạch Hơn Thuỳ Anh Lanh Chanh</h2>
         <textarea id="inputText" placeholder="Dán chuỗi chứa email và mật khẩu ở đây..." required></textarea>
-        <button id="filterButton" onclick="filterEmails()">Lọc Email:Pass</button>
+        <button id="filterButton" onclick="filterEmails()"><i class="fas fa-filter"></i> Lọc Email:Pass</button>
         
         <div id="output" class="output"></div>
         
         <div class="button-group">
-            <button onclick="copyToClipboard()">Sao chép kết quả</button>
-            <button onclick="downloadResult()">Tải xuống kết quả</button>
-            <button onclick="removeDuplicates()">Xoá Email:Pass Lặp lại</button>
-            <button onclick="resetInput()">Lọc File Mới</button>
-            <button onclick="importFile()">Nhập File</button>
+            <button id="copyButton" onclick="copyToClipboard()"><i class="fas fa-copy"></i> Sao chép kết quả</button>
+            <button id="downloadButton" onclick="openDownloadModal()"><i class="fas fa-download"></i> Tải xuống kết quả</button>
+            <button id="removeButton" onclick="removeDuplicates()"><i class="fas fa-trash-alt"></i> Xoá Email:Pass Lặp lại</button>
+            <button id="resetButton" onclick="resetInput()"><i class="fas fa-redo"></i> Lọc File Mới</button>
+            <button id="importButton" onclick="importFile()"><i class="fas fa-upload"></i> Nhập File</button>
+            <button id="undoButton" onclick="undo()"><i class="fas fa-undo"></i> Hoàn tác</button>
+        </div>
+        <button id="exitButton" onclick="exitToLanguageSelector()">Thoát</button>
+    </div>
+
+    <!-- Modal cho việc nhập tên file -->
+    <div id="modal">
+        <div id="modalContent">
+            <h3>Type Your Keyword Or URL You Want</h3>
+			<h3>( nhập tên file mà bạn muốn lưu )</h3>
+            <input type="text" id="fileNameInput" placeholder="Your Keyword (URL)...">
+            <button onclick="downloadResult()">Confirm</button>
+            <button onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <script>
         let resultData = [];
+        let previousData = "";
+        const translations = {
+            vi: {
+                title: "Lọc Email:Pass Sạch Hơn Thuỳ Anh Lanh Chanh",
+                placeholder: "Dán chuỗi chứa email và mật khẩu ở đây...",
+                noResult: "Không tìm thấy email và mật khẩu hợp lệ.",
+                copySuccess: "Đã sao chép vào clipboard!",
+                copyError: "Lỗi khi sao chép: ",
+                noFilter: "Vui lòng lọc kết quả trước khi sao chép.",
+                noDownload: "Vui lòng lọc kết quả trước khi tải xuống.",
+                noDuplicates: "Vui lòng lọc kết quả trước khi xóa các email trùng lặp.",
+                duplicatesRemoved: "Đã xóa các email trùng lặp!",
+                noUndo: "Không có thao tác nào để hoàn tác.",
+                fileImport: "Nhập File",
+                filterButton: "Lọc Email:Pass",
+                copyButton: "Sao chép kết quả",
+                downloadButton: "Tải xuống kết quả",
+                removeButton: "Xoá Email:Pass Lặp lại",
+                resetButton: "Lọc File Mới",
+                undoButton: "Hoàn tác"
+            },
+            en: {
+                title: "Filter Clean Email:Pass List",
+                placeholder: "Paste the string containing email and password here...",
+                noResult: "No valid email and password pairs found.",
+                copySuccess: "Copied to clipboard!",
+                copyError: "Error copying: ",
+                noFilter: "Please filter the results before copying.",
+                noDownload: "Please filter the results before downloading.",
+                noDuplicates: "Please filter the results before removing duplicates.",
+                duplicatesRemoved: "Duplicates removed!",
+                noUndo: "No actions to undo.",
+                fileImport: "Import File",
+                filterButton: "Filter Email:Pass",
+                copyButton: "Copy Result",
+                downloadButton: "Download Result",
+                removeButton: "Remove Duplicate",
+                resetButton: "Filter New File",
+                undoButton: "Undo"
+            }
+        };
+
+        function chooseLanguage() {
+            const lang = document.getElementById("languageSelect").value;
+            setLanguage(lang);
+            document.getElementById("languageContainer").style.display = "none";
+            document.getElementById("filterContainer").style.display = "block";
+        }
+
+        function setLanguage(lang) {
+            document.getElementById("title").textContent = translations[lang].title;
+            document.getElementById("inputText").placeholder = translations[lang].placeholder;
+            document.getElementById("filterButton").textContent = translations[lang].filterButton;
+            document.getElementById("copyButton").textContent = translations[lang].copyButton;
+            document.getElementById("downloadButton").textContent = translations[lang].downloadButton;
+            document.getElementById("removeButton").textContent = translations[lang].removeButton;
+            document.getElementById("resetButton").textContent = translations[lang].resetButton;
+            document.getElementById("importButton").textContent = translations[lang].fileImport;
+            document.getElementById("undoButton").textContent = translations[lang].undoButton;
+        }
 
         function filterEmails() {
             const inputText = document.getElementById("inputText");
             const outputDiv = document.getElementById("output");
             const filterButton = document.getElementById("filterButton");
             
-            // Regular expression để tìm các cặp email và mật khẩu
             const regex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}):([a-zA-Z0-9!@#$%^&*()_+=-]{6,})/g;
             let matches = inputText.value.match(regex);
             
             if (matches && matches.length > 0) {
-                resultData = matches; // Lưu kết quả vào mảng resultData
+                resultData = matches;
                 outputDiv.textContent = resultData.join("\n");
-                outputDiv.style.display = "block"; // Hiển thị ô kết quả
-                inputText.style.display = "none"; // Ẩn ô nhập
-                filterButton.style.display = "none"; // Ẩn nút Lọc Email:Pass
+                outputDiv.style.display = "block";
+                inputText.style.display = "none";
+                filterButton.style.display = "none";
             } else {
-                outputDiv.textContent = "Không tìm thấy email và mật khẩu hợp lệ.";
-                outputDiv.style.display = "block"; // Hiển thị ô kết quả
+                outputDiv.textContent = translations[getLanguage()].noResult;
+                outputDiv.style.display = "block";
             }
+        }
+
+        function openDownloadModal() {
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        function downloadResult() {
+            const fileName = document.getElementById("fileNameInput").value.trim();
+            if (!fileName) {
+                alert("Vui lòng nhập tên file.");
+                return;
+            }
+
+            const date = new Date();
+            const fileNameWithDate = `${fileName}_${date.toLocaleDateString().replace(/\//g, '-')}_${date.getHours()}-${date.getMinutes()}.txt`;
+            const outputText = document.getElementById("output").textContent;
+
+            const blob = new Blob([outputText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileNameWithDate;
+            link.click();
+
+            closeModal();  // Đóng modal sau khi tải xuống
         }
 
         function resetInput() {
             const inputText = document.getElementById("inputText");
             const outputDiv = document.getElementById("output");
-            const filterButton = document.getElementById("filterButton");
-            inputText.value = ""; // Xóa nội dung ô nhập
-            inputText.style.display = "block"; // Hiển thị lại ô nhập
-            outputDiv.style.display = "none"; // Ẩn ô kết quả
-            filterButton.style.display = "block"; // Hiển thị lại nút Lọc Email:Pass
-            resultData = []; // Reset kết quả
+            inputText.value = "";
+            inputText.style.display = "block";
+            outputDiv.style.display = "none";
         }
 
         function importFile() {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.txt';
-
             input.addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
@@ -140,54 +317,16 @@
                     reader.readAsText(file);
                 }
             });
-
             input.click();
         }
 
-        // Hàm sao chép kết quả vào clipboard
-        function copyToClipboard() {
-            const outputText = document.getElementById("output").textContent;
-            if (outputText) {
-                navigator.clipboard.writeText(outputText)
-                    .then(() => {
-                        alert("Đã sao chép vào clipboard!");
-                    })
-                    .catch(err => {
-                        alert("Lỗi khi sao chép: " + err);
-                    });
-            } else {
-                alert("Vui lòng lọc kết quả trước khi sao chép.");
-            }
+        function exitToLanguageSelector() {
+            document.getElementById("filterContainer").style.display = "none";
+            document.getElementById("languageContainer").style.display = "block";
         }
 
-        // Hàm tải kết quả dưới dạng file văn bản
-        function downloadResult() {
-            const outputText = document.getElementById("output").textContent;
-            if (outputText) {
-                const blob = new Blob([outputText], { type: 'text/plain' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'email_pass.txt';
-                link.click();
-            } else {
-                alert("Vui lòng lọc kết quả trước khi tải xuống.");
-            }
-        }
-
-        // Hàm xoá các email:pass trùng lặp
-        function removeDuplicates() {
-            if (resultData.length === 0) {
-                alert("Vui lòng lọc kết quả trước khi xóa các email trùng lặp.");
-                return;
-            }
-            
-            // Sử dụng Set để loại bỏ các phần tử trùng lặp
-            const uniqueResults = [...new Set(resultData)];
-            resultData = uniqueResults; // Cập nhật lại mảng kết quả
-
-            const outputDiv = document.getElementById("output");
-            outputDiv.textContent = uniqueResults.join("\n");
-            alert("Đã xóa các email trùng lặp!");
+        function getLanguage() {
+            return document.getElementById("languageSelect").value;
         }
     </script>
 
