@@ -69,13 +69,19 @@
         .button-group {
             margin-top: 10px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             flex-wrap: wrap;
             gap: 10px;
         }
         .button-group button {
             flex: 1;
             min-width: 48%;
+        }
+        .button-group-bottom {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
         #languageSelector {
             display: flex;
@@ -158,18 +164,25 @@
     <div id="filterContainer" class="container" style="display: none;">
         <h2 id="title">Lọc Email:Pass Sạch Hơn Thuỳ Anh Lanh Chanh</h2>
         <textarea id="inputText" placeholder="Dán chuỗi chứa email và mật khẩu ở đây..." required></textarea>
-        <button id="filterButton" onclick="filterEmails()"><i class="fas fa-filter"></i> Lọc Email:Pass</button>
-        
         <div id="output" class="output"></div>
         
-        <div class="button-group">
+        <!-- Các nút chính được di chuyển xuống dưới cùng của ô kết quả -->
+        <div class="button-group-bottom">
+            <button id="filterButton" onclick="filterEmails()"><i class="fas fa-filter"></i> Lọc Email:Pass</button>
             <button id="copyButton" onclick="copyToClipboard()"><i class="fas fa-copy"></i> Sao chép kết quả</button>
             <button id="downloadButton" onclick="openDownloadModal()"><i class="fas fa-download"></i> Tải xuống kết quả</button>
+        </div>
+        
+        <!-- Các nút phụ được di chuyển sang bên trái -->
+        <div class="button-group">
+            <button id="downloadCSVButton" onclick="downloadCSV()"><i class="fas fa-file-csv"></i> Tải CSV</button>
             <button id="removeButton" onclick="removeDuplicates()"><i class="fas fa-trash-alt"></i> Xoá Email:Pass Lặp lại</button>
             <button id="resetButton" onclick="resetInput()"><i class="fas fa-redo"></i> Lọc File Mới</button>
+            <button id="selectAllButton" onclick="selectAll()"><i class="fas fa-check-square"></i> Chọn tất cả</button>
             <button id="importButton" onclick="importFile()"><i class="fas fa-upload"></i> Nhập File</button>
             <button id="undoButton" onclick="undo()"><i class="fas fa-undo"></i> Hoàn tác</button>
         </div>
+
         <button id="exitButton" onclick="exitToLanguageSelector()">Thoát</button>
     </div>
 
@@ -203,9 +216,11 @@
                 filterButton: "Lọc Email:Pass",
                 copyButton: "Sao chép kết quả",
                 downloadButton: "Tải xuống kết quả",
+                downloadCSVButton: "Tải CSV",
                 removeButton: "Xoá Email:Pass Lặp lại",
                 resetButton: "Lọc File Mới",
-                undoButton: "Hoàn tác"
+                undoButton: "Hoàn tác",
+                selectAllButton: "Chọn tất cả"
             },
             en: {
                 title: "Filter Clean Email:Pass List",
@@ -222,9 +237,11 @@
                 filterButton: "Filter Email:Pass",
                 copyButton: "Copy Result",
                 downloadButton: "Download Result",
+                downloadCSVButton: "Download CSV",
                 removeButton: "Remove Duplicate",
                 resetButton: "Filter New File",
-                undoButton: "Undo"
+                undoButton: "Undo",
+                selectAllButton: "Select All"
             }
         };
 
@@ -241,10 +258,12 @@
             document.getElementById("filterButton").textContent = translations[lang].filterButton;
             document.getElementById("copyButton").textContent = translations[lang].copyButton;
             document.getElementById("downloadButton").textContent = translations[lang].downloadButton;
+            document.getElementById("downloadCSVButton").textContent = translations[lang].downloadCSVButton;
             document.getElementById("removeButton").textContent = translations[lang].removeButton;
             document.getElementById("resetButton").textContent = translations[lang].resetButton;
             document.getElementById("importButton").textContent = translations[lang].fileImport;
             document.getElementById("undoButton").textContent = translations[lang].undoButton;
+            document.getElementById("selectAllButton").textContent = translations[lang].selectAllButton;
         }
 
         function filterEmails() {
@@ -295,12 +314,32 @@
             closeModal();  // Đóng modal sau khi tải xuống
         }
 
+        function downloadCSV() {
+            const outputText = document.getElementById("output").textContent;
+            const rows = outputText.split("\n").map(row => row.split(":"));
+            const csvContent = "Email,Password\n" + rows.map(row => row.join(",")).join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'result.csv';
+            link.click();
+        }
+
         function resetInput() {
             const inputText = document.getElementById("inputText");
             const outputDiv = document.getElementById("output");
             inputText.value = "";
             inputText.style.display = "block";
             outputDiv.style.display = "none";
+        }
+
+        function selectAll() {
+            const outputDiv = document.getElementById("output");
+            const range = document.createRange();
+            range.selectNode(outputDiv);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
         }
 
         function importFile() {
@@ -332,29 +371,37 @@
         function copyToClipboard() {
             const outputDiv = document.getElementById("output");
 
-            if (outputDiv.textContent.trim() === "") {
+            if (outputDiv.textContent === "") {
                 alert(translations[getLanguage()].noFilter);
                 return;
             }
 
-            const textToCopy = outputDiv.textContent;
+            navigator.clipboard.writeText(outputDiv.textContent).then(
+                () => alert(translations[getLanguage()].copySuccess),
+                err => alert(translations[getLanguage()].copyError + err)
+            );
+        }
 
-            // Tạo một textarea tạm thời để sao chép dữ liệu vào clipboard
-            const textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
-            document.body.appendChild(textArea);
-            textArea.select();
-            textArea.setSelectionRange(0, 99999); // Dành cho di động
-
-            try {
-                document.execCommand('copy');
-                alert(translations[getLanguage()].copySuccess);
-            } catch (err) {
-                alert(translations[getLanguage()].copyError + err);
+        function removeDuplicates() {
+            const outputDiv = document.getElementById("output");
+            if (outputDiv.textContent === "") {
+                alert(translations[getLanguage()].noDuplicates);
+                return;
             }
 
-            // Xóa textarea sau khi sao chép
-            document.body.removeChild(textArea);
+            resultData = [...new Set(resultData)];
+            outputDiv.textContent = resultData.join("\n");
+            alert(translations[getLanguage()].duplicatesRemoved);
+        }
+
+        function undo() {
+            if (previousData === "") {
+                alert(translations[getLanguage()].noUndo);
+                return;
+            }
+
+            document.getElementById("output").textContent = previousData;
+            resultData = previousData.split("\n");
         }
     </script>
 
