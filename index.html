@@ -328,6 +328,34 @@
         function getLanguage() {
             return document.getElementById("languageSelect").value;
         }
+
+        function copyToClipboard() {
+            const outputDiv = document.getElementById("output");
+
+            if (outputDiv.textContent.trim() === "") {
+                alert(translations[getLanguage()].noFilter);
+                return;
+            }
+
+            const textToCopy = outputDiv.textContent;
+
+            // Tạo một textarea tạm thời để sao chép dữ liệu vào clipboard
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            textArea.setSelectionRange(0, 99999); // Dành cho di động
+
+            try {
+                document.execCommand('copy');
+                alert(translations[getLanguage()].copySuccess);
+            } catch (err) {
+                alert(translations[getLanguage()].copyError + err);
+            }
+
+            // Xóa textarea sau khi sao chép
+            document.body.removeChild(textArea);
+        }
     </script>
 
 </body>
