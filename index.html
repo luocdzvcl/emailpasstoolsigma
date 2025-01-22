@@ -270,13 +270,15 @@
             const inputText = document.getElementById("inputText");
             const outputDiv = document.getElementById("output");
             const filterButton = document.getElementById("filterButton");
-            
+
+            // Regular expression to match email:password pairs
             const regex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}):([a-zA-Z0-9!@#$%^&*()_+=-]{6,})/g;
             let matches = inputText.value.match(regex);
-            
+
             if (matches && matches.length > 0) {
                 resultData = matches;
-                outputDiv.textContent = resultData.join("\n");
+                const hitCount = matches.length;  // Count the number of valid email:password pairs
+                outputDiv.textContent = `Found ${hitCount} valid email:password pairs:\n\n` + resultData.join("\n");
                 outputDiv.style.display = "block";
                 inputText.style.display = "none";
                 filterButton.style.display = "none";
@@ -328,80 +330,49 @@
 
         function resetInput() {
             const inputText = document.getElementById("inputText");
-            const outputDiv = document.getElementById("output");
             inputText.value = "";
+            document.getElementById("output").style.display = "none";
+            document.getElementById("filterButton").style.display = "block";
             inputText.style.display = "block";
-            outputDiv.style.display = "none";
+        }
+
+        function copyToClipboard() {
+            const outputDiv = document.getElementById("output");
+            const text = outputDiv.textContent;
+            if (!text) {
+                alert(translations[getLanguage()].noFilter);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert(translations[getLanguage()].copySuccess);
+            }).catch(err => {
+                console.error(translations[getLanguage()].copyError, err);
+            });
+        }
+
+        function removeDuplicates() {
+            if (resultData.length === 0) {
+                alert(translations[getLanguage()].noFilter);
+                return;
+            }
+
+            const uniqueData = [...new Set(resultData)];
+            resultData = uniqueData;
+            document.getElementById("output").textContent = `Found ${uniqueData.length} valid email:password pairs:\n\n` + uniqueData.join("\n");
+            alert(translations[getLanguage()].duplicatesRemoved);
         }
 
         function selectAll() {
-            const outputDiv = document.getElementById("output");
-            const range = document.createRange();
-            range.selectNode(outputDiv);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-        }
-
-        function importFile() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.txt';
-            input.addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById("inputText").value = e.target.result;
-                    };
-                    reader.readAsText(file);
-                }
+            const text = resultData.join("\n");
+            navigator.clipboard.writeText(text).then(() => {
+                alert(translations[getLanguage()].copySuccess);
             });
-            input.click();
         }
 
         function exitToLanguageSelector() {
             document.getElementById("filterContainer").style.display = "none";
             document.getElementById("languageContainer").style.display = "block";
-        }
-
-        function getLanguage() {
-            return document.getElementById("languageSelect").value;
-        }
-
-        function copyToClipboard() {
-            const outputDiv = document.getElementById("output");
-
-            if (outputDiv.textContent === "") {
-                alert(translations[getLanguage()].noFilter);
-                return;
-            }
-
-            navigator.clipboard.writeText(outputDiv.textContent).then(
-                () => alert(translations[getLanguage()].copySuccess),
-                err => alert(translations[getLanguage()].copyError + err)
-            );
-        }
-
-        function removeDuplicates() {
-            const outputDiv = document.getElementById("output");
-            if (outputDiv.textContent === "") {
-                alert(translations[getLanguage()].noDuplicates);
-                return;
-            }
-
-            resultData = [...new Set(resultData)];
-            outputDiv.textContent = resultData.join("\n");
-            alert(translations[getLanguage()].duplicatesRemoved);
-        }
-
-        function undo() {
-            if (previousData === "") {
-                alert(translations[getLanguage()].noUndo);
-                return;
-            }
-
-            document.getElementById("output").textContent = previousData;
-            resultData = previousData.split("\n");
         }
     </script>
 
