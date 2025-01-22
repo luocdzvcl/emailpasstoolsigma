@@ -65,6 +65,7 @@
             display: none;
             max-height: 460px;
             overflow-y: auto;
+            color: #ff0000; /* Màu đỏ để báo lỗi */
         }
         .button-group {
             margin-top: 10px;
@@ -183,7 +184,7 @@
             <button id="undoButton" onclick="undo()"><i class="fas fa-undo"></i> Hoàn tác</button>
         </div>
 
-        <button id="exitButton" onclick="exitToLanguageSelector()">Thoát</button>
+        <button id="exitButton" onclick="exitToLanguageSelector()">Leave</button>
     </div>
 
     <!-- Modal cho việc nhập tên file -->
@@ -220,7 +221,8 @@
                 removeButton: "Xoá Email:Pass Lặp lại",
                 resetButton: "Lọc File Mới",
                 undoButton: "Hoàn tác",
-                selectAllButton: "Chọn tất cả"
+                selectAllButton: "Chọn tất cả",
+                errorMessage: "ERROR: Dữ liệu không hợp lệ (Ví Dụ Dữ Liệu Đầu Vào : Https://daylaurl.vn/:daylaemail@mauemail.vn:matkhau123@)"
             },
             en: {
                 title: "Filter Clean Email:Pass List",
@@ -241,7 +243,8 @@
                 removeButton: "Remove Duplicate",
                 resetButton: "New File",
                 undoButton: "Undo",
-                selectAllButton: "Select All"
+                selectAllButton: "Select All",
+                errorMessage: "ERROR: Invalid data (Example Data : Https://ThisIsURL.Com/:ThisIsEmail@Example.com:Password123@)"
             }
         };
 
@@ -283,9 +286,36 @@
                 inputText.style.display = "none";
                 filterButton.style.display = "none";
             } else {
-                outputDiv.textContent = translations[getLanguage()].noResult;
+                outputDiv.textContent = translations[getLanguage()].errorMessage;
                 outputDiv.style.display = "block";
             }
+        }
+
+        function getLanguage() {
+            return document.getElementById("languageSelect").value;
+        }
+
+        function copyToClipboard() {
+            const outputDiv = document.getElementById("output");
+            const text = outputDiv.textContent;
+            if (!text) {
+                alert(translations[getLanguage()].noFilter);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert(translations[getLanguage()].copySuccess);
+            }).catch(err => {
+                console.error(translations[getLanguage()].copyError, err);
+            });
+        }
+
+        function resetInput() {
+            const inputText = document.getElementById("inputText");
+            inputText.value = "";
+            document.getElementById("output").style.display = "none";
+            document.getElementById("filterButton").style.display = "block";
+            inputText.style.display = "block";
         }
 
         function openDownloadModal() {
@@ -328,29 +358,6 @@
             link.click();
         }
 
-        function resetInput() {
-            const inputText = document.getElementById("inputText");
-            inputText.value = "";
-            document.getElementById("output").style.display = "none";
-            document.getElementById("filterButton").style.display = "block";
-            inputText.style.display = "block";
-        }
-
-        function copyToClipboard() {
-            const outputDiv = document.getElementById("output");
-            const text = outputDiv.textContent;
-            if (!text) {
-                alert(translations[getLanguage()].noFilter);
-                return;
-            }
-
-            navigator.clipboard.writeText(text).then(() => {
-                alert(translations[getLanguage()].copySuccess);
-            }).catch(err => {
-                console.error(translations[getLanguage()].copyError, err);
-            });
-        }
-
         function removeDuplicates() {
             if (resultData.length === 0) {
                 alert(translations[getLanguage()].noFilter);
@@ -375,6 +382,5 @@
             document.getElementById("languageContainer").style.display = "block";
         }
     </script>
-
 </body>
 </html>
