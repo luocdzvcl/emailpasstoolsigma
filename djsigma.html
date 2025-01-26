@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leetopn Sorter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        input {
+            width: 48%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-family: Arial, sans-serif;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        .output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leetopn Sorter</h1>
+    <textarea id="inputText" placeholder="Enter lines of text here..."></textarea>
+    <br>
+    <div class="container">
+        <input type="text" id="searchKey" placeholder="Search by key (e.g., 'Games')">
+        <input type="text" id="sortKey" placeholder="Enter key to sort by (e.g., 'Kim cương')">
+        <button onclick="sortAndSearch()">Sort and Search</button>
+    </div>
+    <br>
+    <div class="output" id="outputText"></div>
+
+    <script>
+        function sortAndSearch() {
+            const inputText = document.getElementById('inputText').value;
+            const sortKey = document.getElementById('sortKey').value.trim();
+            const searchKey = document.getElementById('searchKey').value.trim();
+
+            if (!sortKey && !searchKey) {
+                alert("Please enter at least a key to sort or search by!");
+                return;
+            }
+
+            // Split the text into lines
+            let lines = inputText.split('\n').filter(line => line.trim() !== '');
+
+            // If there's a search key, filter the lines first
+            if (searchKey) {
+                lines = lines.filter(line => line.includes(searchKey)); // Only include lines that contain the searchKey
+            }
+
+            // Sort the lines if a sortKey is provided
+            if (sortKey) {
+                lines = lines.sort((a, b) => {
+                    const valueA = extractValue(a, sortKey);
+                    const valueB = extractValue(b, sortKey);
+                    return valueB - valueA; // Sort in descending order
+                });
+            }
+
+            // Create table headers (based on the first line of data)
+            const headers = lines[0].split(' | ').map(item => item.split('=')[0].trim());
+            
+            // Insert 'USER:PASS' as the first row and first column
+            headers[0] = "USER:PASS";
+
+            // Create table rows
+            const rows = lines.map(line => {
+                const columns = line.split(' | ').map(item => item.trim());
+                return `<tr>${columns.map((col, index) => {
+                    if (index === 0) {
+                        return `<td>${col.split(":")[0]}:${col.split(":")[1]}</td>`;
+                    }
+                    return `<td>${col}</td>`;
+                }).join('')}</tr>`;
+            }).join('');
+
+            // Construct the table HTML
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+
+            // Display the table
+            document.getElementById('outputText').innerHTML = tableHTML;
+        }
+
+        function extractValue(line, key) {
+            // Match the key-value pair in the format "key = value"
+            const regex = new RegExp(`${key}\\s*=\\s*(\\d+)`);
+            const match = line.match(regex);
+            return match ? parseInt(match[1], 10) : 0; // Return the numeric value or 0 if not found
+        }
+    </script>
+</body>
+</html>
